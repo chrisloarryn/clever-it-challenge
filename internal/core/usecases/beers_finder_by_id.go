@@ -1,10 +1,8 @@
 package usecases
 
 import (
-	"context"
-	"fmt"
-
 	"CleverIT-challenge/internal/core/domain/beers"
+	"context"
 )
 
 // FinderBeersByID is the use case than find all beers
@@ -20,8 +18,8 @@ func NewFinderBeersByID(repository beers.Repository) *FinderBeersByID {
 
 // Execute finder a beer by his ID in the repository of beers
 func (beersFinder *FinderBeersByID) Execute(ctx context.Context, beerID int) (beers.Beer, error) {
-	if beerID < 1 {
-		return beers.Beer{}, fmt.Errorf("Invalid ID: %d", beerID)
+	if err := beers.ValidateBeerID(beerID); err != nil {
+		return beers.Beer{}, err
 	}
 	beerResult, err := beersFinder.beersRepository.FindBeerByID(ctx, beerID)
 	if err != nil {

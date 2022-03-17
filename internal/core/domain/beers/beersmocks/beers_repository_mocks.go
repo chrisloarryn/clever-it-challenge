@@ -64,3 +64,17 @@ func (mr *MockRepositoryMockRecorder) FindBeerByID(arg0, arg1 interface{}) *gomo
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBeerByID", reflect.TypeOf((*MockRepository)(nil).FindBeerByID), arg0, arg1)
 }
+
+// SaveBeer mocks base method.
+func (m *MockRepository) SaveBeer(arg0 context.Context, arg1 beers.Beer) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveBeer", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveBeer indicates an expected call of SaveBeer.
+func (mr *MockRepositoryMockRecorder) SaveBeer(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveBeer", reflect.TypeOf((*MockRepository)(nil).SaveBeer), arg0, arg1)
+}
