@@ -6,4 +6,5 @@ import "context"
 
 type Service interface {
 	GetCurrencyPriceInDollar(ctx context.Context, currencyID string) (float64, error)
+	IsValidCurrency(ctx context.Context, currencyID string) (bool, error)
 }

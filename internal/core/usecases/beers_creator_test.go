@@ -1,6 +1,7 @@
 package usecases_test
 
 import (
+	"CleverIT-challenge/internal/core/domain/currency/currencymocks"
 	"context"
 	"fmt"
 	"testing"
@@ -19,6 +20,8 @@ func TestCreateBeer_Execute_ShouldCreateABeer(t *testing.T) {
 	controller := gomock.NewController(t)
 
 	repository := beersmocks.NewMockRepository(controller)
+	service := currencymocks.NewMockService(controller)
+
 	newBeer := beers.Beer{
 		ID:       123,
 		Name:     "Golden",
@@ -28,8 +31,9 @@ func TestCreateBeer_Execute_ShouldCreateABeer(t *testing.T) {
 		Country:  "Chile",
 	}
 	repository.EXPECT().SaveBeer(gomock.Any(), newBeer).Return(nil).Times(1)
+	service.EXPECT().IsValidCurrency(gomock.Any(), "EUR").Return(true, nil)
 
-	createBeerUseCase := usecases.NewCreateBeer(repository)
+	createBeerUseCase := usecases.NewCreateBeer(repository, service)
 
 	// Execute
 	err := createBeerUseCase.Execute(context.TODO(), newBeer)
@@ -53,9 +57,12 @@ func TestCreateBeer_Execute_ShouldReturnAnError(t *testing.T) {
 	customError := fmt.Errorf("this is a custom error")
 
 	repository := beersmocks.NewMockRepository(controller)
+	service := currencymocks.NewMockService(controller)
+	service.EXPECT().IsValidCurrency(gomock.Any(), "EUR").Return(true, nil)
+
 	repository.EXPECT().SaveBeer(gomock.Any(), newBeer).Return(customError).Times(1)
 
-	createBeerUseCase := usecases.NewCreateBeer(repository)
+	createBeerUseCase := usecases.NewCreateBeer(repository, service)
 
 	// Execute
 	err := createBeerUseCase.Execute(context.TODO(), newBeer)
@@ -79,8 +86,38 @@ func TestCreateBeer_Execute_ShouldReturnAnErrorForInvalidNegative(t *testing.T) 
 	invalidPriceError := fmt.Errorf("invalid price")
 
 	repository := beersmocks.NewMockRepository(controller)
+	service := currencymocks.NewMockService(controller)
 
-	createBeerUseCase := usecases.NewCreateBeer(repository)
+	createBeerUseCase := usecases.NewCreateBeer(repository, service)
+
+	// Execute
+	err := createBeerUseCase.Execute(context.TODO(), newBeer)
+
+	// Verify
+	assert.EqualError(t, err, invalidPriceError.Error())
+}
+
+
+func TestCreateBeer_Execute_ShouldReturnAnErrorForInvalidCurrency(t *testing.T) {
+	t.Log("Should return an error when try to create a beer with an invalid currency")
+	// Setup
+	controller := gomock.NewController(t)
+	newBeer := beers.Beer{
+		ID:       123,
+		Name:     "Golden",
+		Brewery:  "Kross",
+		Price:    10.5,
+		Currency: "ASD",
+		Country:  "Chile",
+	}
+	invalidPriceError := fmt.Errorf("invalid currency value")
+
+	repository := beersmocks.NewMockRepository(controller)
+	service := currencymocks.NewMockService(controller)
+
+	service.EXPECT().IsValidCurrency(gomock.Any(), "ASD").Return(false, nil)
+
+	createBeerUseCase := usecases.NewCreateBeer(repository, service)
 
 	// Execute
 	err := createBeerUseCase.Execute(context.TODO(), newBeer)

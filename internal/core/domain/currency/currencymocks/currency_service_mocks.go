@@ -50,11 +50,12 @@ func (mr *MockServiceMockRecorder) GetCurrencyPriceInDollar(arg0, arg1 interface
 }
 
 // IsValidCurrency mocks base method.
-func (m *MockService) IsValidCurrency(arg0 context.Context, arg1 string) bool {
+func (m *MockService) IsValidCurrency(arg0 context.Context, arg1 string) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsValidCurrency", arg0, arg1)
 	ret0, _ := ret[0].(bool)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // IsValidCurrency indicates an expected call of IsValidCurrency.
