@@ -21,12 +21,19 @@ func ValidateBeerID(beerID int) error {
 	return nil
 }
 
-func ValidateBeer(beer Beer) error{
+func ValidatePrice(price float64) error {
+	if price < 0 {
+		return fmt.Errorf("invalid price")
+	}
+	return nil
+}
+
+func ValidateBeer(beer Beer) error {
 	if len(beer.Name) == 0 {
 		return fmt.Errorf("name couldn't be empty")
 	}
-	if beer.Price < 0 {
-		return fmt.Errorf("invalid price")
+	if err := ValidatePrice(beer.Price); err != nil {
+		return err
 	}
 	return nil
 }
