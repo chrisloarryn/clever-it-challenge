@@ -8,11 +8,13 @@ import (
 	"CleverIT-challenge/internal/core/domain/currency"
 )
 
+// BoxPriceCalculator calculates the box price of the beer
 type BoxPriceCalculator struct {
 	beersRepository beers.Repository
 	currencyService currency.Service
 }
 
+// NewBoxPriceCalculator constructor
 func NewBoxPriceCalculator(repository beers.Repository, service currency.Service) *BoxPriceCalculator {
 	return &BoxPriceCalculator{
 		beersRepository: repository,
@@ -20,6 +22,7 @@ func NewBoxPriceCalculator(repository beers.Repository, service currency.Service
 	}
 }
 
+// Execute executes the use case BoxPriceCalculator
 func (boxPriceCalculator *BoxPriceCalculator) Execute(ctx context.Context, beerID int, quantity int, currency string)(float64, error) {
 	if err := beers.ValidateBeerID(beerID); err != nil {
 		return 0, err
@@ -33,12 +36,12 @@ func (boxPriceCalculator *BoxPriceCalculator) Execute(ctx context.Context, beerI
 		return 0, err
 	}
 	var amountFrom, amountTo float64
-	amountFrom, err = boxPriceCalculator.currencyService.GetCurrencyPriceInDollar(ctx, beerFound.Currency)
-	if err != nil {
+	if amountFrom, err = boxPriceCalculator.currencyService.GetCurrencyPriceInDollar(ctx, beerFound.Currency); err != nil {
+		fmt.Println("Error en 1")
 		return 0, err
 	}
-	amountTo, err = boxPriceCalculator.currencyService.GetCurrencyPriceInDollar(ctx, currency)
-	if err != nil {
+	if amountTo, err = boxPriceCalculator.currencyService.GetCurrencyPriceInDollar(ctx, currency); err != nil {
+		fmt.Println("Error en 2")
 		return 0, err
 	}
 	fromUSD := 1 / amountFrom
