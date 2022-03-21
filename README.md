@@ -1,5 +1,24 @@
 # Clever IT Challenge
 
+## Especificaciones
+Para ejecutar este aplicativo se necesita:
+
+### Desarrollo
+Solo es necesario el api token:
+````shell
+API_TOKEN=<YOUR_API_TOKEN>
+````
+
+### Producción
+Se necesita una DB postgres configurada, por default toma los siguientes valores:
+````shell
+DB_HOST=localhost
+DB_PORT=5432
+DB_DATABASE=postgres
+DB_USER=postgres
+DB_PASSWORD=postgres
+````
+
 ## Problema
 
 Bender es fanático de las cervezas y quiere tener un registro de todas las cervezas que prueba y como calcular el precio que necesita para comprar una caja de algún tipo especifico de cervezas. Para esto necesita una API REST con esta información que posteriormente compartirá con sus amigos.

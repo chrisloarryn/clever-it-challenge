@@ -13,7 +13,7 @@ type FindAllBeersHandler struct {
 
 func NewFindAllBeersHandler(container dependencies.Container) *FindAllBeersHandler {
 	return &FindAllBeersHandler{
-		uc: usecases.NewFinderAllBeers(container.BeersRepository),
+		uc: usecases.NewFinderAllBeers(container.BeersRepository()),
 	}
 }
 

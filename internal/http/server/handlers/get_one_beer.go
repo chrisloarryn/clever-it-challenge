@@ -15,7 +15,7 @@ type FindOneBeerHandler struct {
 
 func NewFindOneBeerHandler(container dependencies.Container) *FindOneBeerHandler {
 	return &FindOneBeerHandler{
-		uc: usecases.NewFinderBeersByID(container.BeersRepository),
+		uc: usecases.NewFinderBeersByID(container.BeersRepository()),
 	}
 }
 

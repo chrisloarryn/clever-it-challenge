@@ -17,7 +17,7 @@ type CalculateBeerBoxHandler struct {
 
 func NewCalculateBeerBoxHandler(container dependencies.Container) *CalculateBeerBoxHandler {
 	return &CalculateBeerBoxHandler{
-		uc: usecases.NewBoxPriceCalculator(container.BeersRepository, container.CurrencyService),
+		uc: usecases.NewBoxPriceCalculator(container.BeersRepository(), container.CurrencyService()),
 	}
 }
 

@@ -20,6 +20,9 @@ type currencyClientHTTP struct {
 type Response struct {
 	Success bool               `json:"success"`
 	Quotes  map[string]float64 `json:"quotes"`
+	Error struct{
+		Info    string             `json:"info,omitempty"`
+	} `json:"error"`
 }
 
 func (client *currencyClientHTTP) GetCurrencyPriceInDollar(_ context.Context, currencyID string) (float64, error) {
@@ -33,19 +36,19 @@ func (client *currencyClientHTTP) GetCurrencyPriceInDollar(_ context.Context, cu
 		return 0, err
 	}
 	response := &Response{}
-	err = json.Unmarshal(bytes, response)
-	if err != nil {
+	if err = json.Unmarshal(bytes, response); err != nil {
 		return 0, err
 	}
-
-	currencyKey := "USD"+currencyID
+	if !response.Success {
+		return 0, fmt.Errorf(response.Error.Info)
+	}
+	currencyKey := "USD" + currencyID
 	for key, value := range response.Quotes {
-		fmt.Printf("Value: %s%s\n", "USD", key)
 		if key == currencyKey {
 			return value, nil
 		}
 	}
-	log.Fatalln("Error finding curency: ", currencyKey)
+	log.Println("Error finding curency: ", currencyKey)
 	return 0, fmt.Errorf("invalid currencyKey")
 }
 
@@ -59,9 +62,11 @@ func (client *currencyClientHTTP) IsValidCurrency(_ context.Context, currencyID 
 		return false, err
 	}
 	response := &Response{}
-	err = json.Unmarshal(bytes, response)
-	if err != nil {
+	if err = json.Unmarshal(bytes, response); err != nil {
 		return false, err
+	}
+	if !response.Success {
+		return false, fmt.Errorf(response.Error.Info)
 	}
 
 	for key, _ := range response.Quotes {
@@ -69,6 +74,7 @@ func (client *currencyClientHTTP) IsValidCurrency(_ context.Context, currencyID 
 			return true, nil
 		}
 	}
+	log.Println("Error finding curency: ", currencyID)
 	return false, nil
 }
 

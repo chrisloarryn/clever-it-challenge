@@ -14,7 +14,7 @@ type CreateBeerHandler struct {
 
 func NewCreateBeerHandler(container dependencies.Container) *CreateBeerHandler {
 	return &CreateBeerHandler{
-		uc: usecases.NewCreateBeer(container.BeersRepository, container.CurrencyService),
+		uc: usecases.NewCreateBeer(container.BeersRepository(), container.CurrencyService()),
 	}
 }
 

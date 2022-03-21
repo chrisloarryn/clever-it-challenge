@@ -6,12 +6,13 @@ import (
 	"fmt"
 )
 
-type InMemoryRepository struct {
+// Repository is the struct when you choose the in memory storage
+type Repository struct {
 	list map[int]beers.Beer
 }
 
-func (repository *InMemoryRepository) FindAllBeers(_ context.Context) ([]beers.Beer, error) {
-	result := []beers.Beer{}
+func (repository *Repository) FindAllBeers(_ context.Context) ([]beers.Beer, error) {
+	var result []beers.Beer
 
 	for _, beer := range repository.list {
 		result = append(result, beer)
@@ -20,27 +21,27 @@ func (repository *InMemoryRepository) FindAllBeers(_ context.Context) ([]beers.B
 	return result, nil
 }
 
-func (repository *InMemoryRepository) FindBeerByID(_ context.Context, beerID int) (beers.Beer, error) {
+func (repository *Repository) FindBeerByID(_ context.Context, beerID int) (beers.Beer, error) {
 
 	for key, beer := range repository.list {
 		if key == beerID {
 			return beer, nil
 		}
 	}
-	return beers.Beer{}, fmt.Errorf("Beer ID doesn't exist")
+	return beers.Beer{}, fmt.Errorf("beer ID doesn't exist")
 }
 
-func (repository *InMemoryRepository) SaveBeer(_ context.Context, beer beers.Beer) error {
+func (repository *Repository) SaveBeer(_ context.Context, beer beers.Beer) error {
 	_, exist := repository.list[beer.ID]
 	if exist {
-		return fmt.Errorf("The beer ID already exists")
+		return fmt.Errorf("the beer ID already exists")
 	}
 	repository.list[beer.ID] = beer
 	return nil
 }
 
 func NewInMemoryRepository() beers.Repository {
-	return &InMemoryRepository{
+	return &Repository{
 		list: map[int]beers.Beer{},
 	}
 }
