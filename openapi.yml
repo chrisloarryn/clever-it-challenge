@@ -120,7 +120,7 @@ paths:
           required: false
           schema:
             type: string
-            example: "Cervecería Modelo"
+            example: "Modelo Brewery"
       responses:
         '200':
           description: List of beers retrieved successfully
@@ -173,7 +173,7 @@ paths:
                 value:
                   id: 102
                   name: "Corona Extra"
-                  brewery: "Cervecería Modelo"
+                  brewery: "Modelo Brewery"
                   country: "Mexico"
                   price: 1200
                   currency: "CLP"
@@ -424,19 +424,6 @@ paths:
                 $ref: '#/components/schemas/Beer'
         '404':
           description: Beer not found
-    get:
-      tags:
-        - cerveza
-      summary: Lista el detalle de la marca de cervezas
-      operationId: searchBeerById
-      description: |
-        Busca una cerveza por su Id
-      parameters:
-        - name: beerID
-          in: path
-          description: 'Busca una cerveza por su Id'
-          required: true
-          schema:
 components:
   schemas:
     Beer:
@@ -464,7 +451,7 @@ components:
         brewery:
           type: string
           description: Name of the brewery that produces the beer
-          example: "Cervecería Modelo"
+          example: "Modelo Brewery"
           minLength: 1
           maxLength: 255
         country:
@@ -734,7 +721,7 @@ components:
       value:
         id: 1
         name: "Corona Extra"
-        brewery: "Cervecería Modelo"
+        brewery: "Modelo Brewery"
         country: "Mexico"
         price: 1200
         currency: "CLP"
