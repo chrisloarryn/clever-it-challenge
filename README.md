@@ -304,7 +304,7 @@ This project follows Go best practices and enterprise patterns:
 {
   "id": 1,
   "name": "Corona Extra",
-  "brewery": "Cervecería Modelo",
+  "brewery": "Modelo Brewery",
   "country": "Mexico",
   "price": 1200,
   "currency": "CLP",
