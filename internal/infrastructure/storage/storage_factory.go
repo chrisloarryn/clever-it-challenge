@@ -15,6 +15,8 @@ type RepositoryType string
 const (
 	InMemory   RepositoryType = "inmemory"
 	PostgreSQL RepositoryType = "postgres"
+	MongoDB    RepositoryType = "mongodb" // Placeholder for future implementation
+	MySQL      RepositoryType = "mysql"   // Placeholder for future implementation
 )
 
 // RepositoryFactory creates repositories based on configuration
@@ -36,6 +38,10 @@ func (f *RepositoryFactory) CreateBeerRepository() (secondary.BeerRepository, er
 	switch RepositoryType(dbType) {
 	case PostgreSQL:
 		return postgres.NewRepository(f.config)
+	case MongoDB:
+		return nil, fmt.Errorf("mongodb repository not implemented")
+	case MySQL:
+		return nil, fmt.Errorf("mysql repository not implemented")
 	case InMemory:
 		return inmemory.NewRepository(), nil
 	default:

@@ -113,7 +113,7 @@ This project implements **Hexagonal Architecture** (Ports & Adapters) with the f
 └── sql/                        # Database migration scripts
 ```
 
-## � API Documentation
+## API Documentation
 
 ### Health Check
 ```bash
@@ -382,50 +382,50 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤️ and Go**
 
-## Especificaciones
-Para ejecutar este aplicativo se necesita:
+## Specifications
+To run this application you need:
 
-### Desarrollo
-Solo es necesario el api token:
-````shell
+### Development
+Only the API token is required:
+```shell
 API_TOKEN=<YOUR_API_TOKEN>
-````
+```
 
-### Producción
-Se necesita una DB postgres configurada, por default toma los siguientes valores:
-````shell
+### Production
+A configured PostgreSQL database is required. By default, the application uses:
+```shell
 DB_HOST=localhost
 DB_PORT=5432
 DB_DATABASE=postgres
 DB_USER=postgres
 DB_PASSWORD=postgres
-````
+```
 
-## Problema
+## Problem
 
-Bender es fanático de las cervezas y quiere tener un registro de todas las cervezas que prueba y como calcular el precio que necesita para comprar una caja de algún tipo especifico de cervezas. Para esto necesita una API REST con esta información que posteriormente compartirá con sus amigos.
+Bender is a beer enthusiast and wants to keep a record of all the beers he tries and calculate the total price needed to buy a box of a specific beer. For this, he needs a REST API with this information that he will later share with his friends.
 
-### Descripción
+### Description
 
-Se solicita crear un API REST basándonos en la definición que se encuentra en el archivo **openapi.yaml**.
+Create a REST API based on the definition found in the **openapi.yml** file.
 
-#### Funcionalidad
+#### Functionality
 
-- GET /Beers: Lista todas las cervezas que se encuentran en el sistema.
-- POST /Beers: Permite ingresar una nueva cerveza.
-- GET /beers/{beerID}: Lista un detalle de una cerveza especifica.
-- GET /beets/{beerID}/boxprice: Entrega el valor que cuesta una caja específica de cerveza dependiendo de los parámetros ingresados, esto quiere decir que multiplique el precio por la cantidad una vez se homologara la moneda a lo que se ingreso por parámetro.
-    - Quantity: Cantidad de cervezas a comprar (valor por defecto 6).
-    - Currency: Tipo de moneda con la que desea pagar, para este caso se recomienda que utilice esta API <https://currencylayer.com/>
+- GET /Beers: Lists all beers in the system.
+- POST /Beers: Allows adding a new beer.
+- GET /beers/{beerID}: Returns details of a specific beer.
+- GET /beers/{beerID}/boxprice: Returns the cost of a specific box of beer depending on the parameters provided, i.e., multiply the unit price by the quantity after converting the amount to the target currency.
+  - quantity: Number of beers to buy (default 6).
+  - currency: Desired currency to pay with. For this case, it is recommended to use this API https://currencylayer.com/
 
-### Requisitos
+### Requirements
 
-- Puede usar alguno de los siguientes lenguajes Java, NodeJS, Go o Python. Aunque valoramos el uso de GO.
-- Usar Docker y Docker Compose para los diferentes servicios.
-- Se puede usar librarías externas y frameworks
-- Requisito un 70% de cobertura de código
-- Completa libertad para agregar nuevas funcionalidades.
+- You may use Java, NodeJS, Go, or Python. We value the use of Go.
+- Use Docker and Docker Compose for the different services.
+- External libraries and frameworks are allowed.
+- A minimum of 70% test coverage is required.
+- Full freedom to add new features.
 
-### Entrega
+### Delivery
 
-- Enviar el link del repositorio donde se realiza este ejercicio.
+- Share the link to the repository containing this exercise.
