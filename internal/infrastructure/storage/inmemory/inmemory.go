@@ -1,47 +1,75 @@
 package inmemory
 
 import (
-	"CleverIT-challenge/internal/core/domain/beers"
 	"context"
 	"fmt"
+	"sync"
+
+	"beers-challenge/internal/core/domain/beers"
+	"beers-challenge/internal/core/ports/secondary"
 )
 
-// Repository is the struct when you choose the in memory storage
+// Repository implements the secondary.BeerRepository interface for in-memory storage
 type Repository struct {
-	list map[int]beers.Beer
+	data map[int]*beers.Beer
+	mu   sync.RWMutex
 }
 
-func (repository *Repository) FindAllBeers(_ context.Context) ([]beers.Beer, error) {
-	var result []beers.Beer
+// NewRepository creates a new in-memory repository
+func NewRepository() secondary.BeerRepository {
+	return &Repository{
+		data: make(map[int]*beers.Beer),
+		mu:   sync.RWMutex{},
+	}
+}
 
-	for _, beer := range repository.list {
-		result = append(result, beer)
+// Save saves a beer to memory
+func (r *Repository) Save(ctx context.Context, beer *beers.Beer) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Create a copy to avoid external modifications
+	beerCopy := *beer
+	r.data[beer.ID] = &beerCopy
+
+	return nil
+}
+
+// FindByID finds a beer by its ID
+func (r *Repository) FindByID(ctx context.Context, id int) (*beers.Beer, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	beer, exists := r.data[id]
+	if !exists {
+		return nil, beers.NewDomainError("BEER_NOT_FOUND", fmt.Sprintf("Beer with ID %d not found", id), nil)
+	}
+
+	// Return a copy to avoid external modifications
+	beerCopy := *beer
+	return &beerCopy, nil
+}
+
+// FindAll finds all beers
+func (r *Repository) FindAll(ctx context.Context) ([]beers.Beer, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	result := make([]beers.Beer, 0, len(r.data))
+	for _, beer := range r.data {
+		// Create copies to avoid external modifications
+		beerCopy := *beer
+		result = append(result, beerCopy)
 	}
 
 	return result, nil
 }
 
-func (repository *Repository) FindBeerByID(_ context.Context, beerID int) (beers.Beer, error) {
+// ExistsByID checks if a beer exists by its ID
+func (r *Repository) ExistsByID(ctx context.Context, id int) (bool, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
-	for key, beer := range repository.list {
-		if key == beerID {
-			return beer, nil
-		}
-	}
-	return beers.Beer{}, fmt.Errorf("beer ID doesn't exist")
-}
-
-func (repository *Repository) SaveBeer(_ context.Context, beer beers.Beer) error {
-	_, exist := repository.list[beer.ID]
-	if exist {
-		return fmt.Errorf("the beer ID already exists")
-	}
-	repository.list[beer.ID] = beer
-	return nil
-}
-
-func NewInMemoryRepository() beers.Repository {
-	return &Repository{
-		list: map[int]beers.Beer{},
-	}
+	_, exists := r.data[id]
+	return exists, nil
 }

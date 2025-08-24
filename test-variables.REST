@@ -1,0 +1,61 @@
+### Beer API Testing - Development Environment
+### Variables for Development
+@baseURL = http://localhost:8080
+@apiURL = {{baseURL}}/api/v1
+@contentType = application/json
+
+### Variables for Staging (uncomment when needed)
+# @baseURL = https://staging-beer-api.example.com
+# @apiURL = {{baseURL}}/api/v1
+# @contentType = application/json
+
+### Variables for Production (uncomment when needed)
+# @baseURL = https://beer-api.example.com
+# @apiURL = {{baseURL}}/api/v1
+# @contentType = application/json
+
+### Test Data Variables
+@testBeerID = 999
+@testBrewery = Test Brewery
+@testCountry = Chile
+@testPrice = 1500
+@testCurrency = CLP
+
+###
+
+### Quick Health Check
+# @name quickHealthCheck
+GET {{baseURL}}/ping HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Create Test Beer with Variables
+# @name createTestBeer
+POST {{apiURL}}/beers HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "id": {{testBeerID}},
+  "name": "Test Beer {{testBeerID}}",
+  "brewery": "{{testBrewery}}",
+  "country": "{{testCountry}}",
+  "price": {{testPrice}},
+  "currency": "{{testCurrency}}"
+}
+
+###
+
+### Get Test Beer
+# @name getTestBeer
+GET {{apiURL}}/beers/{{testBeerID}} HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Calculate Box Price for Test Beer
+# @name calculateTestBeerBoxPrice
+GET {{apiURL}}/beers/{{testBeerID}}/boxprice?quantity=6&currency=USD HTTP/1.1
+Accept: {{contentType}}
+
+###

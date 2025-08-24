@@ -1,22 +1,91 @@
-# Use postgres/example user/password credentials
-version: '3.1'
+version: '3.8'
 
 services:
-  beer-api:
+  app:
     build: .
     ports:
-      - 8080:8080
+      - "8080:8080"
     environment:
-      PORT: 8080
-      CURRENCY_LAYER_TOKEN: <YOUR-API-TOKEN>
-  db:
-    image: postgres:14.0
-    restart: always
+      - PORT=8080
+      - ENVIRONMENT=docker
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      - DB_TYPE=postgres
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=beers_db
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_SSLMODE=disable
+      - GRACEFUL_SHUTDOWN_TIMEOUT=30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - beer-api-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_DB=beers_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
     ports:
-      - 5432:5432
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: postgres
+      - "5432:5432"
     volumes:
+      - postgres_data:/var/lib/postgresql/data
       - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - beer-api-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d beers_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Optional: Redis for caching (not implemented yet but ready for future use)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - beer-api-network
+    restart: unless-stopped
+    profiles:
+      - cache
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Optional: Adminer for database management
+  adminer:
+    image: adminer:4
+    ports:
+      - "8081:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
+    depends_on:
+      - postgres
+    networks:
+      - beer-api-network
+    profiles:
+      - admin
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  beer-api-network:
+    driver: bridge

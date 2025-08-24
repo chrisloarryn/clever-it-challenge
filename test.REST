@@ -1,0 +1,385 @@
+### Beer API Testing - REST Client File
+### Variables
+@baseURL = http://localhost:8080
+@apiURL = {{baseURL}}/api/v1
+@contentType = application/json
+
+###
+
+### Health Check
+# @name healthCheck
+GET {{baseURL}}/ping HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Get All Beers (Empty Database)
+# @name getAllBeersEmpty
+GET {{apiURL}}/beers HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Create Beer #1 - Corona Extra
+# @name createBeer1
+POST {{apiURL}}/beers HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "id": 1,
+  "name": "Corona Extra",
+  "brewery": "Cervecería Modelo",
+  "country": "Mexico",
+  "price": 1200,
+  "currency": "CLP"
+}
+
+###
+
+### Create Beer #2 - Heineken
+# @name createBeer2
+POST {{apiURL}}/beers HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "id": 2,
+  "name": "Heineken",
+  "brewery": "Heineken N.V.",
+  "country": "Netherlands",
+  "price": 1500,
+  "currency": "CLP"
+}
+
+###
+
+### Create Beer #3 - Budweiser
+# @name createBeer3
+POST {{apiURL}}/beers HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "id": 3,
+  "name": "Budweiser",
+  "brewery": "Anheuser-Busch",
+  "country": "USA",
+  "price": 25.99,
+  "currency": "USD"
+}
+
+###
+
+### Create Beer #4 - Stella Artois
+# @name createBeer4
+POST {{apiURL}}/beers HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "id": 4,
+  "name": "Stella Artois",
+  "brewery": "Anheuser-Busch InBev",
+  "country": "Belgium",
+  "price": 3.50,
+  "currency": "EUR"
+}
+
+###
+
+### Create Beer #5 - Escudo
+# @name createBeer5
+POST {{apiURL}}/beers HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "id": 5,
+  "name": "Escudo",
+  "brewery": "CCU",
+  "country": "Chile",
+  "price": 900,
+  "currency": "CLP"
+}
+
+###
+
+### Get All Beers (After Creating)
+# @name getAllBeers
+GET {{apiURL}}/beers HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Get Beer by ID - Corona Extra
+# @name getBeer1
+GET {{apiURL}}/beers/1 HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Get Beer by ID - Heineken
+# @name getBeer2
+GET {{apiURL}}/beers/2 HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Get Beer by ID - Budweiser
+# @name getBeer3
+GET {{apiURL}}/beers/3 HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Get Beer by ID - Non-existent Beer
+# @name getBeerNotFound
+GET {{apiURL}}/beers/999 HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Calculate Box Price - Corona (6 pack, CLP)
+# @name calculateBoxPrice1
+GET {{apiURL}}/beers/1/boxprice?quantity=6&currency=CLP HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Calculate Box Price - Corona (12 pack, USD)
+# @name calculateBoxPrice2
+GET {{apiURL}}/beers/1/boxprice?quantity=12&currency=USD HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Calculate Box Price - Heineken (24 pack, EUR)
+# @name calculateBoxPrice3
+GET {{apiURL}}/beers/2/boxprice?quantity=24&currency=EUR HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Calculate Box Price - Budweiser (6 pack, same currency)
+# @name calculateBoxPrice4
+GET {{apiURL}}/beers/3/boxprice?quantity=6&currency=USD HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Calculate Box Price - Invalid Beer ID
+# @name calculateBoxPriceInvalid
+GET {{apiURL}}/beers/999/boxprice?quantity=6&currency=USD HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Error Cases - Create Beer with Duplicate ID
+# @name createBeerDuplicate
+POST {{apiURL}}/beers HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "id": 1,
+  "name": "Another Corona",
+  "brewery": "Another Brewery",
+  "country": "Chile",
+  "price": 1000,
+  "currency": "CLP"
+}
+
+###
+
+### Error Cases - Create Beer with Invalid Data (Missing Name)
+# @name createBeerInvalidMissingName
+POST {{apiURL}}/beers HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "id": 10,
+  "brewery": "Test Brewery",
+  "country": "Chile",
+  "price": 1000,
+  "currency": "CLP"
+}
+
+###
+
+### Error Cases - Create Beer with Invalid Data (Negative Price)
+# @name createBeerInvalidNegativePrice
+POST {{apiURL}}/beers HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "id": 11,
+  "name": "Invalid Beer",
+  "brewery": "Test Brewery",
+  "country": "Chile",
+  "price": -100,
+  "currency": "CLP"
+}
+
+###
+
+### Error Cases - Create Beer with Invalid Currency
+# @name createBeerInvalidCurrency
+POST {{apiURL}}/beers HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "id": 12,
+  "name": "Invalid Currency Beer",
+  "brewery": "Test Brewery",
+  "country": "Chile",
+  "price": 1000,
+  "currency": "INVALID"
+}
+
+###
+
+### Error Cases - Calculate Box Price with Invalid Quantity
+# @name calculateBoxPriceInvalidQuantity
+GET {{apiURL}}/beers/1/boxprice?quantity=0&currency=CLP HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Error Cases - Calculate Box Price with Invalid Currency
+# @name calculateBoxPriceInvalidCurrency
+GET {{apiURL}}/beers/1/boxprice?quantity=6&currency=INVALID HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Legacy Routes Testing (Backward Compatibility)
+
+### Create Beer using legacy route
+# @name createBeerLegacy
+POST {{baseURL}}/beers HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "id": 100,
+  "name": "Legacy Beer",
+  "brewery": "Legacy Brewery",
+  "country": "Chile",
+  "price": 800,
+  "currency": "CLP"
+}
+
+###
+
+### Get All Beers using legacy route
+# @name getAllBeersLegacy
+GET {{baseURL}}/beers HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Get Beer by ID using legacy route
+# @name getBeerLegacy
+GET {{baseURL}}/beers/100 HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Calculate Box Price using legacy route
+# @name calculateBoxPriceLegacy
+GET {{baseURL}}/beers/100/boxprice?quantity=6&currency=CLP HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Additional Test Cases
+
+### Create Beer with minimum valid values
+# @name createBeerMinValues
+POST {{apiURL}}/beers HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "id": 200,
+  "name": "A",
+  "brewery": "B",
+  "country": "C",
+  "price": 0.01,
+  "currency": "USD"
+}
+
+###
+
+### Create Beer with maximum length strings
+# @name createBeerMaxValues
+POST {{apiURL}}/beers HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "id": 201,
+  "name": "This is a very long beer name that should be close to the maximum allowed length for testing",
+  "brewery": "This is a very long brewery name that should be close to the maximum allowed length test",
+  "country": "This is a very long country name that should be close to the maximum allowed length test",
+  "price": 99999.99,
+  "currency": "EUR"
+}
+
+###
+
+### Performance Test - Calculate Box Price for Large Quantity
+# @name calculateBoxPriceLargeQuantity
+GET {{apiURL}}/beers/1/boxprice?quantity=1000&currency=USD HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Test Different Currencies
+# @name createBeerJPY
+POST {{apiURL}}/beers HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "id": 300,
+  "name": "Asahi Super Dry",
+  "brewery": "Asahi Breweries",
+  "country": "Japan",
+  "price": 250,
+  "currency": "JPY"
+}
+
+###
+
+### Calculate Box Price - JPY to USD conversion
+# @name calculateBoxPriceJPYtoUSD
+GET {{apiURL}}/beers/300/boxprice?quantity=6&currency=USD HTTP/1.1
+Accept: {{contentType}}
+
+###
+
+### Test CORS - Options Request
+# @name corsTest
+OPTIONS {{apiURL}}/beers HTTP/1.1
+Origin: http://localhost:3000
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: Content-Type
+
+###
+
+### Content-Type Variations
+
+### Create Beer with different content-type
+# @name createBeerDifferentContentType
+POST {{apiURL}}/beers HTTP/1.1
+Content-Type: application/json; charset=utf-8
+
+{
+  "id": 400,
+  "name": "Content Type Test Beer",
+  "brewery": "Test Brewery",
+  "country": "Chile",
+  "price": 1000,
+  "currency": "CLP"
+}
+
+###
+
+### Final Status Check
+# @name finalHealthCheck
+GET {{baseURL}}/ping HTTP/1.1
+Accept: {{contentType}}
+
+###

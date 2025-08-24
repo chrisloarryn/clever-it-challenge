@@ -1,53 +1,429 @@
-openapi: 3.0.0
-servers: [ ]
+openapi: 3.0.3
 info:
-  description: 'Esta API esta diseñada para ser una prueba para los nuevos candidatos al equipo.'
-  version: "1.0.0"
-  title: 'API Falabella FIF'
+  title: Beer API - Hexagonal Architecture
+  description: |
+    A robust, production-ready Beer API service built with Go, implementing Clean Architecture principles and industry best practices.
+    
+    ## Features
+    - **Hexagonal Architecture** with clean separation of concerns
+    - **SOLID principles** implementation with dependency injection
+    - **Multi-database support** (PostgreSQL, In-Memory)
+    - **Currency conversion** with real-time exchange rates
+    - **Box price calculation** with tax and discount support
+    - **Comprehensive error handling** with structured responses
+    - **Input validation** at domain and API levels
+    - **Structured logging** with contextual information
+    
+    ## Architecture
+    Built following hexagonal architecture patterns:
+    - **Domain Layer**: Core business logic and entities
+    - **Application Layer**: Use cases and business services
+    - **Infrastructure Layer**: Database, external APIs, HTTP adapters
+    
+    ## Error Handling
+    All endpoints return structured error responses with:
+    - **error**: Error type/category
+    - **message**: Human-readable description
+    - **code**: Machine-readable error code (optional)
+    
+    ## Currency Support
+    The API supports multiple currencies with real-time conversion:
+    - Base currency storage in database
+    - Dynamic conversion using CurrencyLayer API
+    - Fallback exchange rates when API is unavailable
+    
+  version: 1.0.0
   contact:
-    email: 'lugaetea@falabella.cl'
+    name: Beer API Support
+    email: support@beerapi.com
+    url: https://github.com/yourusername/beer-challenge
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://beerapi.com/terms
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api.beerchallenge.com
+    description: Production server
 tags:
-  - name: cerveza
-    description: rica cerveza..
+  - name: Health
+    description: Health check and monitoring endpoints
+  - name: Beers
+    description: Beer management operations
+  - name: Pricing
+    description: Price calculation and currency conversion
+
 paths:
+  /ping:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: Simple health check to verify the API is running and responsive
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy and operational
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2024-01-15T10:30:00Z"
+                  version:
+                    type: string
+                    example: "1.0.0"
+
+  /api/v1/beers:
+    get:
+      tags:
+        - Beers
+      summary: Get all beers
+      description: Retrieve a list of all beers in the system with their details
+      operationId: getAllBeers
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of beers to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          description: Number of beers to skip for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: country
+          in: query
+          description: Filter beers by country of origin
+          required: false
+          schema:
+            type: string
+            example: "Mexico"
+        - name: brewery
+          in: query
+          description: Filter beers by brewery name
+          required: false
+          schema:
+            type: string
+            example: "Cervecería Modelo"
+      responses:
+        '200':
+          description: List of beers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  beers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Beer'
+                  total:
+                    type: integer
+                    description: Total number of beers available
+                    example: 150
+                  limit:
+                    type: integer
+                    example: 50
+                  offset:
+                    type: integer
+                    example: 0
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Beers
+      summary: Create a new beer
+      description: Add a new beer to the catalog with validation and duplicate checking
+      operationId: createBeer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBeerRequest'
+            examples:
+              craft_beer:
+                summary: Craft Beer Example
+                value:
+                  id: 101
+                  name: "IPA Craft Special"
+                  brewery: "Local Craft Brewery"
+                  country: "USA"
+                  price: 28.50
+                  currency: "USD"
+              mexican_beer:
+                summary: Mexican Beer Example
+                value:
+                  id: 102
+                  name: "Corona Extra"
+                  brewery: "Cervecería Modelo"
+                  country: "Mexico"
+                  price: 1200
+                  currency: "CLP"
+      responses:
+        '201':
+          description: Beer created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Beer created successfully"
+                  beer:
+                    $ref: '#/components/schemas/Beer'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: Beer with this ID already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "CONFLICT"
+                message: "Beer with ID 101 already exists"
+                code: "DUPLICATE_BEER_ID"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/beers/{id}:
+    get:
+      tags:
+        - Beers
+      summary: Get beer by ID
+      description: Retrieve detailed information about a specific beer by its unique identifier
+      operationId: getBeerById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the beer
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            example: 1
+      responses:
+        '200':
+          description: Beer details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Beer'
+        '400':
+          description: Invalid beer ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "VALIDATION_ERROR"
+                message: "Beer ID must be a positive integer"
+                code: "INVALID_BEER_ID"
+        '404':
+          description: Beer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "NOT_FOUND"
+                message: "Beer with ID 999 not found"
+                code: "BEER_NOT_FOUND"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/beers/{id}/boxprice:
+    get:
+      tags:
+        - Pricing
+      summary: Calculate box price with currency conversion
+      description: |
+        Calculate the total price for a quantity of beers with optional currency conversion.
+        Supports real-time exchange rates and includes detailed pricing breakdown.
+      operationId: calculateBoxPrice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the beer
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            example: 1
+        - name: quantity
+          in: query
+          required: true
+          description: Number of beers in the box
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            example: 6
+        - name: currency
+          in: query
+          required: false
+          description: Target currency for price conversion (ISO 4217 format)
+          schema:
+            type: string
+            pattern: '^[A-Z]{3}$'
+            example: "USD"
+            default: "Same as beer's currency"
+        - name: tax
+          in: query
+          required: false
+          description: Tax percentage to apply (0-100)
+          schema:
+            type: number
+            format: float
+            minimum: 0
+            maximum: 100
+            example: 19.0
+            default: 0
+        - name: discount
+          in: query
+          required: false
+          description: Discount percentage to apply (0-100)
+          schema:
+            type: number
+            format: float
+            minimum: 0
+            maximum: 100
+            example: 10.0
+            default: 0
+      responses:
+        '200':
+          description: Box price calculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoxPriceResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_quantity:
+                  summary: Invalid quantity
+                  value:
+                    error: "VALIDATION_ERROR"
+                    message: "Quantity must be between 1 and 1000"
+                    code: "INVALID_QUANTITY"
+                invalid_currency:
+                  summary: Invalid currency format
+                  value:
+                    error: "VALIDATION_ERROR"
+                    message: "Currency must be a valid 3-letter ISO code"
+                    code: "INVALID_CURRENCY_FORMAT"
+        '404':
+          description: Beer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "NOT_FOUND"
+                message: "Beer with ID 999 not found"
+                code: "BEER_NOT_FOUND"
+        '503':
+          description: Currency conversion service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "SERVICE_UNAVAILABLE"
+                message: "Currency conversion service is temporarily unavailable"
+                code: "CURRENCY_SERVICE_ERROR"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Legacy endpoints for backward compatibility
   /beers:
     get:
       tags:
-        - cerveza
-      summary: Lista todas las cervezas
-      operationId: searchBeers
-      description: |
-        Lista todas las cervezas que se encuentran en la base de datos
+        - Beers
+      summary: Get all beers (Legacy)
+      description: Legacy endpoint - use /api/v1/beers instead
+      deprecated: true
+      operationId: getAllBeersLegacy
       responses:
         '200':
-          description: 'Operacion exitosa'
+          description: List of beers (legacy format)
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BeerItem'
+                  $ref: '#/components/schemas/Beer'
+
     post:
       tags:
-        - cerveza
-      summary: 'Ingresa una nueva cerveza'
-      operationId: addBeers
-      description: 'Ingresa una nueva cerveza'
-      responses:
-        '201':
-          description: 'Cerveza creada'
-        '400':
-          description: 'Request invalida'
-        '409':
-          description: 'El ID de la cerveza ya existe'
+        - Beers
+      summary: Create beer (Legacy)
+      description: Legacy endpoint - use /api/v1/beers instead
+      deprecated: true
+      operationId: createBeerLegacy
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BeerItem'
-        description: 'Ingresa una nueva cerveza'
+              $ref: '#/components/schemas/CreateBeerRequest'
+      responses:
+        '201':
+          description: Beer created successfully
+        '400':
+          description: Invalid request
+        '409':
+          description: Beer ID already exists
 
   /beers/{beerID}:
+    get:
+      tags:
+        - Beers
+      summary: Get beer by ID (Legacy)
+      description: Legacy endpoint - use /api/v1/beers/{id} instead
+      deprecated: true
+      operationId: getBeerByIdLegacy
+      parameters:
+        - name: beerID
+          in: path
+          required: true
+          description: Beer identifier
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Beer information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Beer'
+        '404':
+          description: Beer not found
     get:
       tags:
         - cerveza
@@ -61,84 +437,308 @@ paths:
           description: 'Busca una cerveza por su Id'
           required: true
           schema:
-            type: integer
-      responses:
-        '200':
-          description: 'Operacion exitosa'
-        '404':
-          description: 'El Id de la cerveza no existe'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BeerItem'
-
-  /beers/{beerID}/boxprice:
-    get:
-      tags:
-        - cerveza
-      summary: Lista el precio de una caja de cervezas de una marca
-      operationId: boxBeerPriceById
-      description: |
-        Obtiene el precio de una caja de cerveza por su Id
-      parameters:
-        - name: beerID
-          in: path
-          description: 'Busca una cerveza por su Id'
-          required: true
-          schema:
-            type: integer
-        - in: query
-          name: currency
-          schema:
-            type: string
-          description: Tipo de moneda con la que pagará
-        - in: query
-          name: quantity
-          schema:
-            type: integer
-            default: 6
-          description: La cantidad de cervezas a comprar
-      responses:
-        '200':
-          description: 'Operacion exitosa'
-        '404':
-          description: 'El Id de la cerveza no existe'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BeerBox'
 components:
   schemas:
-    BeerItem:
+    Beer:
       type: object
       required:
-        - Id
-        - Name
-        - Brewery
-        - Country
-        - Price
-        - Currency
+        - id
+        - name
+        - brewery
+        - country
+        - price
+        - currency
       properties:
-        Id:
+        id:
           type: integer
+          format: int64
+          description: Unique identifier for the beer
           example: 1
-        Name:
+          minimum: 1
+        name:
           type: string
-          example: 'Golden'
-        Brewery:
+          description: Name of the beer
+          example: "Corona Extra"
+          minLength: 1
+          maxLength: 255
+        brewery:
           type: string
-          example: 'Kross'
-        Country:
+          description: Name of the brewery that produces the beer
+          example: "Cervecería Modelo"
+          minLength: 1
+          maxLength: 255
+        country:
           type: string
-          example: 'Chile'
-        Price:
+          description: Country where the beer is produced
+          example: "Mexico"
+          minLength: 1
+          maxLength: 100
+        price:
           type: number
-          example: 10.5
-        Currency:
+          format: float
+          description: Price of a single beer unit
+          example: 1200
+          minimum: 0.01
+          maximum: 999999.99
+        currency:
           type: string
-          example: 'EUR'
-    BeerBox:
+          description: Currency of the price (ISO 4217 format)
+          example: "CLP"
+          pattern: '^[A-Z]{3}$'
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the beer was created
+          example: "2024-01-15T10:30:00Z"
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the beer was last updated
+          example: "2024-01-15T15:45:30Z"
+          readOnly: true
+
+    CreateBeerRequest:
       type: object
+      required:
+        - id
+        - name
+        - brewery
+        - country
+        - price
+        - currency
       properties:
-        Price Total:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the beer
+          example: 101
+          minimum: 1
+        name:
+          type: string
+          description: Name of the beer
+          example: "IPA Craft Special"
+          minLength: 1
+          maxLength: 255
+        brewery:
+          type: string
+          description: Name of the brewery
+          example: "Local Craft Brewery"
+          minLength: 1
+          maxLength: 255
+        country:
+          type: string
+          description: Country of origin
+          example: "USA"
+          minLength: 1
+          maxLength: 100
+        price:
           type: number
+          format: float
+          description: Unit price of the beer
+          example: 28.50
+          minimum: 0.01
+          maximum: 999999.99
+        currency:
+          type: string
+          description: Price currency (ISO 4217)
+          example: "USD"
+          pattern: '^[A-Z]{3}$'
+
+    BoxPriceResponse:
+      type: object
+      required:
+        - beer_id
+        - beer_name
+        - quantity
+        - unit_price
+        - unit_currency
+        - total_price
+      properties:
+        beer_id:
+          type: integer
+          format: int64
+          description: ID of the beer
+          example: 1
+        beer_name:
+          type: string
+          description: Name of the beer
+          example: "Corona Extra"
+        quantity:
+          type: integer
+          description: Number of beers in the box
+          example: 6
+        unit_price:
+          type: number
+          format: float
+          description: Price per unit in original currency
+          example: 1200
+        unit_currency:
+          type: string
+          description: Original currency of the beer
+          example: "CLP"
+        total_price:
+          type: number
+          format: float
+          description: Total price before conversion (quantity × unit_price)
+          example: 7200
+        target_currency:
+          type: string
+          description: Target currency for conversion (if different from unit_currency)
+          example: "USD"
+        exchange_rate:
+          type: number
+          format: float
+          description: Exchange rate used for conversion (if applicable)
+          example: 0.0012
+        converted_total:
+          type: number
+          format: float
+          description: Total price in target currency (if conversion applied)
+          example: 8.64
+        tax:
+          type: number
+          format: float
+          description: Tax percentage applied
+          example: 19.0
+        discount:
+          type: number
+          format: float
+          description: Discount percentage applied
+          example: 10.0
+        breakdown:
+          type: object
+          description: Detailed price breakdown
+          properties:
+            base_price:
+              type: number
+              format: float
+              description: Base price before tax and discount
+              example: 8.64
+            tax_amount:
+              type: number
+              format: float
+              description: Tax amount added
+              example: 1.64
+            discount_amount:
+              type: number
+              format: float
+              description: Discount amount subtracted
+              example: 0.86
+            final_price:
+              type: number
+              format: float
+              description: Final price after all calculations
+              example: 9.42
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type or category
+          example: "VALIDATION_ERROR"
+          enum:
+            - "VALIDATION_ERROR"
+            - "NOT_FOUND"
+            - "CONFLICT"
+            - "SERVICE_UNAVAILABLE"
+            - "INTERNAL_ERROR"
+        message:
+          type: string
+          description: Human-readable error description
+          example: "Beer ID must be a positive integer"
+        code:
+          type: string
+          description: Machine-readable error code for client handling
+          example: "INVALID_BEER_ID"
+        details:
+          type: object
+          description: Additional error context (optional)
+          additionalProperties: true
+
+  responses:
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            missing_field:
+              summary: Missing required field
+              value:
+                error: "VALIDATION_ERROR"
+                message: "Beer name is required"
+                code: "MISSING_BEER_NAME"
+            invalid_format:
+              summary: Invalid field format
+              value:
+                error: "VALIDATION_ERROR"
+                message: "Price must be greater than 0"
+                code: "INVALID_PRICE"
+            invalid_currency:
+              summary: Invalid currency code
+              value:
+                error: "VALIDATION_ERROR"
+                message: "Currency must be a valid 3-letter ISO code"
+                code: "INVALID_CURRENCY_FORMAT"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "INTERNAL_ERROR"
+            message: "An unexpected error occurred while processing the request"
+            code: "INTERNAL_SERVER_ERROR"
+
+  parameters:
+    BeerIdPath:
+      name: id
+      in: path
+      required: true
+      description: Unique identifier of the beer
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication (future implementation)
+
+  examples:
+    CraftBeer:
+      summary: Craft Beer
+      description: Example of a craft beer from the USA
+      value:
+        id: 101
+        name: "Double IPA Special"
+        brewery: "Craft Beer Co."
+        country: "USA"
+        price: 35.00
+        currency: "USD"
+
+    MexicanBeer:
+      summary: Mexican Beer
+      description: Popular Mexican beer
+      value:
+        id: 1
+        name: "Corona Extra"
+        brewery: "Cervecería Modelo"
+        country: "Mexico"
+        price: 1200
+        currency: "CLP"
+
+# Future security implementation
+# security:
+#   - ApiKeyAuth: []
