@@ -246,6 +246,147 @@ func TestFindBeerByIDNotFound(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
+func TestFindAllBeersSuccess(t *testing.T) {
+	// Arrange
+	mockRepo := new(MockBeerRepository)
+	mockCurrency := new(MockCurrencyService)
+	logger := logger.NewNoOpLogger()
+
+	service := NewBeerService(mockRepo, mockCurrency, logger)
+
+	expectedBeers := []beers.Beer{
+		{ID: 1, Name: "Beer 1"},
+		{ID: 2, Name: "Beer 2"},
+	}
+
+	ctx := context.Background()
+
+	// Setup mocks
+	mockRepo.On("FindAll", ctx).Return(expectedBeers, nil)
+
+	// Act
+	result, err := service.FindAllBeers(ctx)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.Equal(t, expectedBeers, result)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestFindAllBeersError(t *testing.T) {
+	// Arrange
+	mockRepo := new(MockBeerRepository)
+	mockCurrency := new(MockCurrencyService)
+	logger := logger.NewNoOpLogger()
+
+	service := NewBeerService(mockRepo, mockCurrency, logger)
+
+	ctx := context.Background()
+	expectedErr := errors.New("database error")
+
+	// Setup mocks
+	mockRepo.On("FindAll", ctx).Return([]beers.Beer{}, expectedErr)
+
+	// Act
+	result, err := service.FindAllBeers(ctx)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), expectedErr.Error())
+	mockRepo.AssertExpectations(t)
+}
+
+func TestCreateBeerExistsError(t *testing.T) {
+	// Arrange
+	mockRepo := new(MockBeerRepository)
+	mockCurrency := new(MockCurrencyService)
+	logger := logger.NewNoOpLogger()
+	service := NewBeerService(mockRepo, mockCurrency, logger)
+	req := primary.CreateBeerRequest{ID: 1}
+	ctx := context.Background()
+	mockRepo.On("ExistsByID", ctx, 1).Return(false, errors.New("db error"))
+
+	// Act
+	err := service.CreateBeer(ctx, req)
+
+	// Assert
+	assert.Error(t, err)
+}
+
+func TestCreateBeerInvalidCurrencyError(t *testing.T) {
+	// Arrange
+	mockRepo := new(MockBeerRepository)
+	mockCurrency := new(MockCurrencyService)
+	logger := logger.NewNoOpLogger()
+	service := NewBeerService(mockRepo, mockCurrency, logger)
+	req := primary.CreateBeerRequest{ID: 1, Currency: "XXX"}
+	ctx := context.Background()
+	mockRepo.On("ExistsByID", ctx, 1).Return(false, nil)
+	mockCurrency.On("IsValidCurrency", ctx, "XXX").Return(false, errors.New("currency service error"))
+
+	// Act
+	err := service.CreateBeer(ctx, req)
+
+	// Assert
+	assert.Error(t, err)
+}
+
+func TestCreateBeerNewBeerError(t *testing.T) {
+	// Arrange
+	mockRepo := new(MockBeerRepository)
+	mockCurrency := new(MockCurrencyService)
+	logger := logger.NewNoOpLogger()
+	service := NewBeerService(mockRepo, mockCurrency, logger)
+	req := primary.CreateBeerRequest{ID: 0} // Invalid ID
+	ctx := context.Background()
+	mockRepo.On("ExistsByID", ctx, 0).Return(false, nil)
+	mockCurrency.On("IsValidCurrency", ctx, "").Return(true, nil)
+
+	// Act
+	err := service.CreateBeer(ctx, req)
+
+	// Assert
+	assert.Error(t, err)
+}
+
+func TestCreateBeerSaveError(t *testing.T) {
+	// Arrange
+	mockRepo := new(MockBeerRepository)
+	mockCurrency := new(MockCurrencyService)
+	logger := logger.NewNoOpLogger()
+	service := NewBeerService(mockRepo, mockCurrency, logger)
+	req := primary.CreateBeerRequest{ID: 1, Name: "Test", Brewery: "Test", Country: "Test", Price: 1, Currency: "USD"}
+	ctx := context.Background()
+	mockRepo.On("ExistsByID", ctx, 1).Return(false, nil)
+	mockCurrency.On("IsValidCurrency", ctx, "USD").Return(true, nil)
+	mockRepo.On("Save", ctx, mock.Anything).Return(errors.New("db error"))
+
+	// Act
+	err := service.CreateBeer(ctx, req)
+
+	// Assert
+	assert.Error(t, err)
+}
+
+func TestCalculateBoxPriceCalculateError(t *testing.T) {
+	// Arrange
+	mockRepo := new(MockBeerRepository)
+	mockCurrency := new(MockCurrencyService)
+	logger := logger.NewNoOpLogger()
+	service := NewBeerService(mockRepo, mockCurrency, logger)
+	beer := &beers.Beer{ID: 1, Name: "Test", Brewery: "Test", Country: "Test", Price: 1, Currency: "USD"}
+	req := primary.CalculateBoxPriceRequest{BeerID: 1, Quantity: 0} // Invalid quantity
+	ctx := context.Background()
+	mockRepo.On("FindByID", ctx, 1).Return(beer, nil)
+
+	// Act
+	_, err := service.CalculateBoxPrice(ctx, req)
+
+	// Assert
+	assert.Error(t, err)
+}
+
 func TestCalculateBoxPriceSuccess(t *testing.T) {
 	// Arrange
 	mockRepo := new(MockBeerRepository)

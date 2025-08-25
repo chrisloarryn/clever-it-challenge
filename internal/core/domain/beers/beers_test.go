@@ -95,6 +95,58 @@ func TestNewBeerInvalidCurrency(t *testing.T) {
 	assert.Equal(t, "currency", validationErr.Field)
 }
 
+func TestNewBeerEmptyBrewery(t *testing.T) {
+	// Act
+	beer, err := NewBeer(validID, validName, "", validCountry, validPrice, validCurrency)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, beer)
+	validationErr, ok := err.(*ValidationError)
+	assert.True(t, ok)
+	assert.Equal(t, "brewery", validationErr.Field)
+}
+
+func TestNewBeerLongBrewery(t *testing.T) {
+	longBrewery := "This is a very long brewery name that exceeds the maximum allowed length of 100 characters and should fail validation"
+
+	// Act
+	beer, err := NewBeer(validID, validName, longBrewery, validCountry, validPrice, validCurrency)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, beer)
+	validationErr, ok := err.(*ValidationError)
+	assert.True(t, ok)
+	assert.Equal(t, "brewery", validationErr.Field)
+}
+
+func TestNewBeerEmptyCountry(t *testing.T) {
+	// Act
+	beer, err := NewBeer(validID, validName, validBrewery, "", validPrice, validCurrency)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, beer)
+	validationErr, ok := err.(*ValidationError)
+	assert.True(t, ok)
+	assert.Equal(t, "country", validationErr.Field)
+}
+
+func TestNewBeerLongCountry(t *testing.T) {
+	longCountry := "This is a very long country name that exceeds the maximum allowed length of 100 characters and should fail validation"
+
+	// Act
+	beer, err := NewBeer(validID, validName, validBrewery, longCountry, validPrice, validCurrency)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, beer)
+	validationErr, ok := err.(*ValidationError)
+	assert.True(t, ok)
+	assert.Equal(t, "country", validationErr.Field)
+}
+
 func TestBeerValidateSuccess(t *testing.T) {
 	// Arrange
 	beer := &Beer{
@@ -196,6 +248,18 @@ func TestBeerGetID(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, BeerID(validID), beerID)
+}
+
+func TestBeerUpdate(t *testing.T) {
+	// Arrange
+	beer, _ := NewBeer(validID, validName, validBrewery, validCountry, validPrice, validCurrency)
+	oldUpdatedAt := beer.UpdatedAt
+
+	// Act
+	beer.Update()
+
+	// Assert
+	assert.NotEqual(t, oldUpdatedAt, beer.UpdatedAt)
 }
 
 func TestValidationErrorError(t *testing.T) {
